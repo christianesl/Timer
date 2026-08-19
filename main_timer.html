@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boxing Timer Pro - Advanced Interval & Sparring Timer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#FF2E55',
+                            yellow: '#FFB800',
+                            green: '#00E676',
+                            purple: '#8B5CF6',
+                            dark: '#0B0F17',
+                            card: '#161C28',
+                            border: '#2A3447'
+                        }
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0F17;
+            color: #F3F4F6;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Smooth circular progress indicator */
+        .timer-circle {
+            transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Pulse effects for energetic state */
+        @keyframes pulse-glow-red {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 46, 85, 0.3); border-color: rgba(255, 46, 85, 0.8); }
+            50% { box-shadow: 0 0 50px rgba(255, 46, 85, 0.6); border-color: rgba(255, 46, 85, 1); }
+        }
+        @keyframes pulse-glow-green {
+            0%, 100% { box-shadow: 0 0 25px rgba(0, 230, 118, 0.2); border-color: rgba(0, 230, 118, 0.8); }
+            50% { box-shadow: 0 0 45px rgba(0, 230, 118, 0.5); border-color: rgba(0, 230, 118, 1); }
+        }
+        @keyframes pulse-glow-yellow {
+            0%, 100% { box-shadow: 0 0 30px rgba(255, 184, 0, 0.4); }
+            50% { box-shadow: 0 0 60px rgba(255, 184, 0, 0.8); }
+        }
+
+        .state-work-active { animation: pulse-glow-red 2s infinite; }
+        .state-rest-active { animation: pulse-glow-green 2.5s infinite; }
+        .state-warning-active { animation: pulse-glow-yellow 0.8s infinite; }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+
+        /* Dynamic flash overlay for visual warning */
+        .flash-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased font-sans bg-brand-dark text-gray-100 overflow-x-hidden">
+
+    <!-- Flash overlay for state changes / warning -->
+    <div id="flashOverlay" class="flash-overlay"></div>
+
+    <!-- TOP NAVBAR -->
+    <header class="w-full bg-brand-card/80 backdrop-blur-md border-b border-brand-border sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-brand-red to-red-600 p-2.5 rounded-xl shadow-lg shadow-brand-red/30">
+                    <i class="fa-solid font-bold fa-hand-fist text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-orbitron font-extrabold text-xl tracking-wider text-white flex items-center gap-2">
+                        BOXING <span class="text-brand-red">TIMER</span> <span class="text-xs px-2 py-0.5 rounded-full bg-brand-red/20 text-brand-red font-sans font-semibold border border-brand-red/30 uppercase">PRO</span>
+                    </h1>
+                    <p class="text-xs text-gray-400 hidden sm:block">Professional Sparring & Interval Training</p>
+                </div>
+            </div>
+
+            <!-- Top Action Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- WakeLock Status Badge -->
+                <button id="wakeLockBtn" onclick="toggleWakeLock()" class="px-3 py-1.5 rounded-lg text-xs font-medium border border-brand-border bg-gray-800/60 hover:bg-gray-800 text-gray-300 transition flex items-center gap-2" title="Toggle Keep Screen Awake">
+                    <i id="wakeLockIcon" class="fa-solid fa-lightbulb text-gray-500"></i>
+                    <span id="wakeLockText" class="hidden md:inline">Screen Lock</span>
+                </button>
+
+                <!-- Sound Master Toggle -->
+                <button id="soundMuteBtn" onclick="toggleMute()" class="p-2.5 rounded-lg border border-brand-border bg-gray-800/60 hover:bg-gray-800 text-gray-300 transition flex items-center justify-center w-10 h-10" title="Mute/Unmute Sounds">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-brand-green"></i>
+                </button>
+
+                <!-- Fullscreen Toggle -->
+                <button onclick="toggleFullScreen()" class="p-2.5 rounded-lg border border-brand-border bg-gray-800/60 hover:bg-gray-800 text-gray-300 transition flex items-center justify-center w-10 h-10" title="Toggle Fullscreen Mode">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APPLICATION CONTAINER -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-1 flex flex-col gap-6">
+
+        <!-- PRESET SELECTOR BAR -->
+        <section class="w-full bg-brand-card p-2 sm:p-3 rounded-2xl border border-brand-border shadow-xl">
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 whitespace-nowrap hidden md:inline">Presets:</span>
+                
+                <button onclick="applyPreset('pro')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-brand-red"></i> Pro Boxing (12x3m)
+                </button>
+                <button onclick="applyPreset('amateur')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-medal text-brand-yellow"></i> Amateur (3x3m)
+                </button>
+                <button onclick="applyPreset('mma')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-brand-purple"></i> MMA (5x5m)
+                </button>
+                <button onclick="applyPreset('tabata')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-brand-green"></i> HIIT Tabata (8x20s)
+                </button>
+                <button onclick="applyPreset('speed')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-cyan-400"></i> Speed Bag (6x2m)
+                </button>
+            </div>
+        </section>
+
+        <!-- CENTER TIMER DISPLAY AND CONTROL CARD -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- MAIN TIMER CANVAS CARD (Lg 7 cols) -->
+            <div id="timerCard" class="lg:col-span-7 bg-brand-card p-6 sm:p-8 rounded-3xl border border-brand-border shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300">
+                
+                <!-- Dynamic Background Glow -->
+                <div id="bgGlow" class="absolute -inset-10 bg-brand-red/10 blur-3xl rounded-full pointer-events-none opacity-50 transition-all duration-500"></div>
+
+                <!-- Status Header Banner -->
+                <div class="w-full flex items-center justify-between mb-4 z-10">
+                    <!-- State Indicator Pill -->
+                    <div id="statePill" class="px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-red/20 text-brand-red border border-brand-red/40 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-red animate-ping"></span>
+                        <span id="stateText">WARM UP</span>
+                    </div>
+
+                    <!-- Round Counter Indicator -->
+                    <div class="text-right">
+                        <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Round</span>
+                        <span class="font-orbitron text-2xl font-black text-white">
+                            <span id="currentRoundDisplay" class="text-brand-red">1</span>
+                            <span class="text-gray-500 text-lg">/</span>
+                            <span id="totalRoundsDisplay" class="text-gray-400 text-lg">12</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Radial Progress Clock Container -->
+                <div class="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96 my-2 flex items-center justify-center z-10">
+                    <svg class="w-full h-full" viewBox="0 0 220 220">
+                        <!-- Background Circle Track -->
+                        <circle cx="110" cy="110" r="95" stroke="#1F293D" stroke-width="12" fill="transparent" />
+                        <!-- Foreground Animated Circle -->
+                        <circle id="timerProgressCircle" class="timer-circle" cx="110" cy="110" r="95" 
+                                stroke="#FF2E55" stroke-width="12" fill="transparent" 
+                                stroke-dasharray="596.9" stroke-dashoffset="0" stroke-linecap="round" />
+                    </svg>
+
+                    <!-- Center Digital Countdown Text -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <div id="timerDisplay" class="font-orbitron font-black text-6xl sm:text-7xl md:text-8xl tracking-tight text-white drop-shadow-lg transition-colors">
+                            03:00
+                        </div>
+                        <!-- Phase Subtitle / Callout Text -->
+                        <div id="timerSubtext" class="font-rajdhani font-bold text-lg sm:text-xl text-gray-400 tracking-wider mt-1 uppercase">
+                            Get Ready
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIVE COMBO / CALLOUT BANNER (Trainer Mode) -->
+                <div id="trainerBanner" class="w-full my-3 p-3 rounded-2xl bg-gray-900/80 border border-brand-purple/40 text-center z-10 transition-all">
+                    <div class="flex items-center justify-center gap-2 text-xs font-bold text-brand-purple tracking-widest uppercase mb-1">
+                        <i class="fa-solid fa-headset"></i> Audio Trainer Callout
+                    </div>
+                    <div id="comboDisplay" class="font-orbitron font-extrabold text-lg sm:text-2xl text-yellow-400 tracking-wide">
+                        "1 - 2 - HEAD SLIP - 3"
+                    </div>
+                </div>
+
+                <!-- MAIN CONTROLS ACTION BUTTONS -->
+                <div class="w-full grid grid-cols-3 sm:flex items-center justify-center gap-3 mt-4 z-10">
+                    <!-- Reset Button -->
+                    <button onclick="resetTimer()" class="col-span-1 sm:w-28 py-3 sm:py-4 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold rounded-2xl border border-brand-border transition shadow-lg active:scale-95 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-rotate-left text-lg"></i> <span>Reset</span>
+                    </button>
+
+                    <!-- Primary Start/Pause Button -->
+                    <button id="startBtn" onclick="toggleStartPause()" class="col-span-1 sm:w-44 py-3 sm:py-4 bg-gradient-to-r from-brand-red to-red-600 hover:from-red-600 hover:to-brand-red text-white font-orbitron font-extrabold text-base sm:text-xl rounded-2xl shadow-xl shadow-brand-red/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
+                        <i id="startBtnIcon" class="fa-solid fa-play"></i> <span id="startBtnText">START</span>
+                    </button>
+
+                    <!-- Skip Button -->
+                    <button onclick="nextPhase()" class="col-span-1 sm:w-28 py-3 sm:py-4 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold rounded-2xl border border-brand-border transition shadow-lg active:scale-95 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-forward-step text-lg"></i> <span>Skip</span>
+                    </button>
+                </div>
+
+                <div class="mt-4 text-xs text-gray-500 hidden sm:block">
+                    Press <kbd class="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700 font-mono text-gray-300">Space</kbd> to Start/Pause, <kbd class="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700 font-mono text-gray-300">R</kbd> to Reset, <kbd class="px-1.5 py-0.5 bg-gray-800 rounded border border-gray-700 font-mono text-gray-300">N</kbd> for Next Phase.
+                </div>
+            </div>
+
+            <!-- SETTINGS & CUSTOMIZATION SIDEBAR (Lg 5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+
+                <!-- TAB CONTAINER -->
+                <div class="bg-brand-card p-5 sm:p-6 rounded-3xl border border-brand-border shadow-xl">
+                    
+                    <!-- Tab Navigation Header -->
+                    <div class="flex border-b border-brand-border pb-3 mb-5 gap-4">
+                        <button id="tabSettingsBtn" onclick="switchTab('settings')" class="text-sm font-bold pb-2 border-b-2 border-brand-red text-white transition flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-brand-red"></i> Settings
+                        </button>
+                        <button id="tabTrainerBtn" onclick="switchTab('trainer')" class="text-sm font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition flex items-center gap-2">
+                            <i class="fa-solid fa-dumbbell text-brand-purple"></i> Trainer Drills
+                        </button>
+                        <button id="tabStatsBtn" onclick="switchTab('stats')" class="text-sm font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition flex items-center gap-2">
+                            <i class="fa-solid fa-chart-simple text-brand-green"></i> History
+                        </button>
+                    </div>
+
+                    <!-- TAB 1: TIMER SETTINGS -->
+                    <div id="tabSettings" class="space-y-4">
+                        <!-- Round Time Selector -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Round Time</label>
+                                <span class="text-xs text-gray-400">Duration of work time</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSetting('roundTime', -10)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">-</button>
+                                <span id="roundTimeVal" class="font-orbitron font-bold text-sm text-brand-red w-16 text-center">03:00</span>
+                                <button onclick="adjustSetting('roundTime', 10)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Rest Time Selector -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Rest Time</label>
+                                <span class="text-xs text-gray-400">Duration between rounds</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSetting('restTime', -5)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">-</button>
+                                <span id="restTimeVal" class="font-orbitron font-bold text-sm text-brand-green w-16 text-center">01:00</span>
+                                <button onclick="adjustSetting('restTime', 5)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Number of Rounds -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Total Rounds</label>
+                                <span class="text-xs text-gray-400">Total number of rounds</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSetting('totalRounds', -1)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">-</button>
+                                <span id="totalRoundsVal" class="font-orbitron font-bold text-sm text-gray-100 w-16 text-center">12</span>
+                                <button onclick="adjustSetting('totalRounds', 1)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Warmup Delay -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Get Ready Delay</label>
+                                <span class="text-xs text-gray-400">Countdown before Round 1</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="adjustSetting('warmupTime', -5)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">-</button>
+                                <span id="warmupTimeVal" class="font-orbitron font-bold text-sm text-brand-yellow w-16 text-center">00:10</span>
+                                <button onclick="adjustSetting('warmupTime', 5)" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 font-bold text-gray-300 active:scale-95">+</button>
+                            </div>
+                        </div>
+
+                        <!-- 10-Second Warning Clapper -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Warning Signal</label>
+                                <span class="text-xs text-gray-400">Clapper before round end</span>
+                            </div>
+                            <select id="warningSelect" onchange="updateSettingsFromInputs()" class="bg-gray-800 border border-gray-700 text-xs font-bold text-gray-200 rounded-lg p-2 focus:outline-none">
+                                <option value="10" selected>10 Seconds</option>
+                                <option value="15">15 Seconds</option>
+                                <option value="5">5 Seconds</option>
+                                <option value="0">Disabled</option>
+                            </select>
+                        </div>
+
+                        <!-- Audio Voice Coach Toggle -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Voice Coach</label>
+                                <span class="text-xs text-gray-400">Announces rounds and warnings</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="voiceCoachToggle" checked onchange="updateSettingsFromInputs()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: TRAINER DRILL MODE -->
+                    <div id="tabTrainer" class="space-y-4 hidden">
+                        <div class="p-3 bg-brand-purple/10 border border-brand-purple/30 rounded-2xl text-xs text-brand-purple">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Trainer Callout mode plays dynamic audio & visual punch combinations during active work rounds!
+                        </div>
+
+                        <!-- Toggle Trainer Mode -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-bold text-gray-200 block">Trainer Callouts</label>
+                                <span class="text-xs text-gray-400">Random audio drill calls</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="trainerToggle" onchange="updateSettingsFromInputs()" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-purple"></div>
+                            </label>
+                        </div>
+
+                        <!-- Callout Interval Frequency -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-sm font-bold text-gray-200">Callout Frequency</label>
+                                <span id="calloutFreqText" class="text-xs font-bold text-brand-purple">Every 8-12 sec</span>
+                            </div>
+                            <input type="range" id="calloutFreqSlider" min="4" max="20" value="10" onchange="updateSettingsFromInputs()" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-brand-purple">
+                        </div>
+
+                        <!-- Combination Selection Preset -->
+                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 space-y-2">
+                            <label class="text-sm font-bold text-gray-200 block">Combo Complexity</label>
+                            <select id="comboComplexitySelect" onchange="updateSettingsFromInputs()" class="w-full bg-gray-800 border border-gray-700 text-xs font-bold text-gray-200 rounded-xl p-2.5 focus:outline-none">
+                                <option value="basic">Basic Boxing (1-2, 1-1-2, 1-2-3)</option>
+                                <option value="intermediate" selected>Intermediate (Include Slips, Rolls & Body)</option>
+                                <option value="advanced">Advanced Pro (Fast 4-5 Punch Combos & Footwork)</option>
+                            </select>
+                        </div>
+
+                        <!-- Test Voice Callout Button -->
+                        <button onclick="testTrainerCallout()" class="w-full py-2.5 bg-brand-purple/20 hover:bg-brand-purple/30 text-brand-purple border border-brand-purple/40 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-volume-low"></i> Test Voice Callout
+                        </button>
+                    </div>
+
+                    <!-- TAB 3: WORKOUT HISTORY & STATS -->
+                    <div id="tabStats" class="space-y-4 hidden">
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-900/80 p-3.5 rounded-2xl border border-brand-border text-center">
+                                <span class="text-xs text-gray-400 block font-medium">Total Work Time</span>
+                                <span id="statsTotalWork" class="font-orbitron font-bold text-lg text-brand-red">00:00</span>
+                            </div>
+                            <div class="bg-gray-900/80 p-3.5 rounded-2xl border border-brand-border text-center">
+                                <span class="text-xs text-gray-400 block font-medium">Rounds Completed</span>
+                                <span id="statsRoundsDone" class="font-orbitron font-bold text-lg text-brand-green">0</span>
+                            </div>
+                            <div class="bg-gray-900/80 p-3.5 rounded-2xl border border-brand-border text-center">
+                                <span class="text-xs text-gray-400 block font-medium">Est. Calories</span>
+                                <span id="statsCalories" class="font-orbitron font-bold text-lg text-brand-yellow">0 kcal</span>
+                            </div>
+                            <div class="bg-gray-900/80 p-3.5 rounded-2xl border border-brand-border text-center">
+                                <span class="text-xs text-gray-400 block font-medium">Completed Workouts</span>
+                                <span id="statsSessions" class="font-orbitron font-bold text-lg text-cyan-400">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Session Log List -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-gray-300 uppercase">Recent Sessions</span>
+                                <button onclick="clearWorkoutHistory()" class="text-xs text-red-400 hover:text-red-300">Clear</button>
+                            </div>
+                            <div id="historyLogList" class="max-h-40 overflow-y-auto space-y-2 pr-1">
+                                <div class="text-xs text-gray-500 text-center py-4">No completed sessions yet. Get to work!</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full border-t border-brand-border bg-brand-card/60 py-4 px-4 mt-8">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-2">
+            <p>© Boxing Timer Pro - Built for Fighters, Martial Artists & Gyms.</p>
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-volume-high text-brand-green"></i> Web Audio Synth</span>
+                <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-brand-red"></i> Offline Ready</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* ===================================================================
+           STATE MANAGEMENT & DEFAULT CONFIGURATION
+           =================================================================== */
+        const DEFAULT_CONFIG = {
+            roundTime: 180,      // 3 minutes work
+            restTime: 60,        // 1 minute rest
+            totalRounds: 12,     // 12 rounds
+            warmupTime: 10,      // 10s warmup
+            warningTime: 10,     // 10s warning clap
+            voiceCoach: true,    // Speech synthesis enabled
+            trainerMode: false,  // Dynamic callouts
+            calloutFreq: 10,     // Interval frequency seconds
+            comboComplexity: 'intermediate',
+            soundMuted: false
+        };
+
+        let config = { ...DEFAULT_CONFIG };
+
+        // Timer Execution State
+        let timerState = 'STOPPED'; // 'WARMUP', 'WORK', 'REST', 'PAUSED', 'COMPLETED', 'STOPPED'
+        let previousStateBeforePause = 'WARMUP';
+        let currentRound = 1;
+        let timeRemaining = config.warmupTime;
+        let totalPhaseDuration = config.warmupTime;
+        let timerInterval = null;
+        let trainerCalloutTimeout = null;
+        let wakeLock = null;
+
+        // Stats tracking
+        let workoutStats = {
+            totalWorkSeconds: 0,
+            roundsCompleted: 0,
+            sessionsCompleted: 0,
+            history: []
+        };
+
+        // Load saved history from LocalStorage
+        try {
+            const savedHistory = localStorage.getItem('boxing_timer_stats');
+            if (savedHistory) {
+                workoutStats = JSON.parse(savedHistory);
+            }
+        } catch (e) {
+            console.error('Could not load history from storage', e);
+        }
+
+        /* ===================================================================
+           WEB AUDIO API SYNTHESIZER (NO EXTERNAL MP3 DEPENDENCIES)
+           =================================================================== */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Synthesizes a realistic resonant Boxing Ring Gong Bell
+        function playGongSound() {
+            if (config.soundMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                // Base fundamental tones for deep brass ring gong
+                const freqs = [440, 880, 1220, 1640];
+                freqs.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = idx === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    
+                    // Pitch decay sweep
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.98, now + 2.5);
+
+                    const initialVol = 0.4 / (idx + 1);
+                    gain.gain.setValueAtTime(initialVol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 2.8);
+                });
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        // Synthesizes 10-Second Woodblock / Clapper Warning Strike
+        function playClapperSound() {
+            if (config.soundMuted) return;
+            try {
+                const ctx = getAudioContext();
+                
+                // Play 3 quick distinct wood strikes
+                [0, 0.18, 0.36].forEach(delay => {
+                    const now = ctx.currentTime + delay;
+                    
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+
+                    gain.gain.setValueAtTime(0.7, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.07);
+                });
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        // Synthesizes Ref Whistle
+        function playWhistleSound() {
+            if (config.soundMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(2400, now);
+                osc.frequency.linearRampToValueAtTime(2600, now + 0.1);
+                osc.frequency.linearRampToValueAtTime(2350, now + 0.3);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {
+                console.error("Whistle audio error:", e);
+            }
+        }
+
+        // Voice Coach Announcement using Web Speech API
+        function speak(text) {
+            if (config.soundMuted || !config.voiceCoach) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop any pending speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.1; // Energetic pacing
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Implementing drill callout database & logic...
+           TRAINER DRILL COMBINATION DATABASE
+           =================================================================== */
+        const COMBOS = {
+            basic: [
+                "1 - 2",
+                "1 - 1 - 2",
+                "1 - 2 - 3",
+                "Double Jab",
+                "Jab - Cross",
+                "1 - 2 - Body Shot"
+            ],
+            intermediate: [
+                "1 - 2 - Slip Left - 3",
+                "1 - 2 - Roll Right - 2",
+                "1 - Body - 2 - Head",
+                "Jab - Lead Upper - Cross",
+                "1 - 2 - 3 - Low Kick",
+                "Pace Up! 10 Seconds Fast!"
+            ],
+            advanced: [
+                "1 - 2 - 3 - 2 - Slip - 2",
+                "Lead Upper - Cross - Lead Hook - Roll",
+                "1 - 2 - Body Hook - Head Hook - Pivot",
+                "Fast 4 Punches - Step Back - 2",
+                "Burpees! 5 Seconds!",
+                "1 - 2 - 5 - 6 - 3"
+            ]
+        };
+
+        function triggerTrainerCallout() {
+            if (timerState !== 'WORK' || !config.trainerMode) return;
+
+            const list = COMBOS[config.comboComplexity] || COMBOS.intermediate;
+            const randomCombo = list[Math.floor(Math.random() * list.length)];
+
+            // Visual display update
+            const comboEl = document.getElementById('comboDisplay');
+            comboEl.innerText = `"${randomCombo}"`;
+            comboEl.classList.add('text-brand-yellow', 'scale-105');
+            setTimeout(() => comboEl.classList.remove('scale-105'), 300);
+
+            // Audio Speech
+            speak(randomCombo);
+
+            // Schedule next callout
+            scheduleNextCallout();
+        }
+
+        function scheduleNextCallout() {
+            if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
+            if (timerState === 'WORK' && config.trainerMode) {
+                // Randomize variation around configured frequency (+/- 25%)
+                const base = config.calloutFreq;
+                const jitter = (Math.random() * 0.5 - 0.25) * base;
+                const delayMs = Math.max(3, base + jitter) * 1000;
+
+                trainerCalloutTimeout = setTimeout(triggerTrainerCallout, delayMs);
+            }
+        }
+
+        function testTrainerCallout() {
+            getAudioContext();
+            const list = COMBOS[config.comboComplexity];
+            const sample = list[Math.floor(Math.random() * list.length)];
+            document.getElementById('comboDisplay').innerText = `"${sample}"`;
+            speak(sample);
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Implementing main timer engine & transitions...
+           TIMER ENGINE & STATE MACHINE
+           =================================================================== */
+        function startTimerEngine() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                if (timerState === 'PAUSED' || timerState === 'STOPPED') return;
+
+                timeRemaining--;
+                
+                // Check for warning clapper
+                if (config.warningTime > 0 && timeRemaining === config.warningTime) {
+                    if (timerState === 'WORK') {
+                        playClapperSound();
+                        speak("10 seconds!");
+                        flashScreen('rgba(255, 184, 0, 0.2)');
+                    }
+                }
+
+                // Check phase completion
+                if (timeRemaining <= 0) {
+                    advancePhase();
+                }
+
+                updateUI();
+            }, 1000);
+        }
+
+        function advancePhase() {
+            if (timerState === 'WARMUP') {
+                // Transition Warmup -> Round 1 Work
+                timerState = 'WORK';
+                timeRemaining = config.roundTime;
+                totalPhaseDuration = config.roundTime;
+                playGongSound();
+                speak(`Round ${currentRound}`);
+                flashScreen('rgba(255, 46, 85, 0.3)');
+                scheduleNextCallout();
+
+            } else if (timerState === 'WORK') {
+                // Track stats
+                workoutStats.totalWorkSeconds += config.roundTime;
+                workoutStats.roundsCompleted++;
+
+                if (currentRound >= config.totalRounds) {
+                    // WORKOUT COMPLETE!
+                    timerState = 'COMPLETED';
+                    timeRemaining = 0;
+                    playGongSound();
+                    setTimeout(playGongSound, 500);
+                    speak("Workout Complete! Great job!");
+                    workoutStats.sessionsCompleted++;
+                    saveWorkoutSession();
+                    flashScreen('rgba(0, 230, 118, 0.4)');
+                    clearInterval(timerInterval);
+                } else {
+                    // Transition Work -> Rest
+                    timerState = 'REST';
+                    timeRemaining = config.restTime;
+                    totalPhaseDuration = config.restTime;
+                    playGongSound();
+                    speak("Rest");
+                    flashScreen('rgba(0, 230, 118, 0.25)');
+                }
+
+            } else if (timerState === 'REST') {
+                // Transition Rest -> Next Round Work
+                currentRound++;
+                timerState = 'WORK';
+                timeRemaining = config.roundTime;
+                totalPhaseDuration = config.roundTime;
+                playGongSound();
+                speak(`Round ${currentRound}`);
+                flashScreen('rgba(255, 46, 85, 0.3)');
+                scheduleNextCallout();
+            }
+
+            updateUI();
+        }
+
+        function toggleStartPause() {
+            getAudioContext(); // Resume web audio context on user action
+
+            if (timerState === 'STOPPED' || timerState === 'COMPLETED') {
+                // Start Fresh
+                currentRound = 1;
+                if (config.warmupTime > 0) {
+                    timerState = 'WARMUP';
+                    timeRemaining = config.warmupTime;
+                    totalPhaseDuration = config.warmupTime;
+                    speak("Get Ready");
+                } else {
+                    timerState = 'WORK';
+                    timeRemaining = config.roundTime;
+                    totalPhaseDuration = config.roundTime;
+                    playGongSound();
+                    speak("Round 1");
+                    scheduleNextCallout();
+                }
+                startTimerEngine();
+                requestWakeLock();
+
+            } else if (timerState === 'PAUSED') {
+                // Resume
+                timerState = previousStateBeforePause;
+                startTimerEngine();
+                if (timerState === 'WORK') scheduleNextCallout();
+                requestWakeLock();
+
+            } else {
+                // Pause
+                previousStateBeforePause = timerState;
+                timerState = 'PAUSED';
+                if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
+            }
+
+            updateUI();
+        }
+
+        function resetTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
+
+            timerState = 'STOPPED';
+            currentRound = 1;
+            timeRemaining = config.warmupTime > 0 ? config.warmupTime : config.roundTime;
+            totalPhaseDuration = timeRemaining;
+
+            updateUI();
+        }
+
+        function nextPhase() {
+            if (timerState === 'STOPPED') return;
+            getAudioContext();
+            advancePhase();
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Updating visual UI elements & canvas progress...
+           VISUAL UI RENDERING & CONTROLS
+           =================================================================== */
+        function formatTime(seconds) {
+            const mins = Math.floor(Math.max(0, seconds) / 60);
+            const secs = Math.max(0, seconds) % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateUI() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerSubtext = document.getElementById('timerSubtext');
+            const statePill = document.getElementById('statePill');
+            const stateText = document.getElementById('stateText');
+            const currentRoundDisplay = document.getElementById('currentRoundDisplay');
+            const totalRoundsDisplay = document.getElementById('totalRoundsDisplay');
+            const timerCard = document.getElementById('timerCard');
+            const bgGlow = document.getElementById('bgGlow');
+            const progressCircle = document.getElementById('timerProgressCircle');
+            const startBtnText = document.getElementById('startBtnText');
+            const startBtnIcon = document.getElementById('startBtnIcon');
+            const startBtn = document.getElementById('startBtn');
+
+            // 1. Digital Time Text
+            timerDisplay.innerText = formatTime(timeRemaining);
+            currentRoundDisplay.innerText = currentRound;
+            totalRoundsDisplay.innerText = config.totalRounds;
+
+            // 2. Circle Progress Stroke
+            // Radial Circumference = 2 * PI * 95 ≈ 596.9
+            const circumference = 596.9;
+            const progressRatio = totalPhaseDuration > 0 ? timeRemaining / totalPhaseDuration : 0;
+            const strokeOffset = circumference - (progressRatio * circumference);
+            progressCircle.style.strokeDashoffset = strokeOffset;
+
+            // 3. State Styling & Dynamic Theme Color Swaps
+            timerCard.classList.remove('state-work-active', 'state-rest-active', 'state-warning-active');
+
+            if (timerState === 'WARMUP') {
+                stateText.innerText = "GET READY";
+                timerSubtext.innerText = "Prepare for Round 1";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-yellow-500/20 text-brand-yellow border border-brand-yellow/40 flex items-center gap-2";
+                progressCircle.style.stroke = "#FFB800";
+                bgGlow.className = "absolute -inset-10 bg-brand-yellow/10 blur-3xl rounded-full pointer-events-none opacity-50";
+
+            } else if (timerState === 'WORK') {
+                stateText.innerText = `ROUND ${currentRound}`;
+                timerSubtext.innerText = "FIGHT!";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-red/20 text-brand-red border border-brand-red/40 flex items-center gap-2";
+                progressCircle.style.stroke = "#FF2E55";
+                bgGlow.className = "absolute -inset-10 bg-brand-red/15 blur-3xl rounded-full pointer-events-none opacity-60";
+                
+                if (timeRemaining <= config.warningTime && config.warningTime > 0) {
+                    timerCard.classList.add('state-warning-active');
+                    timerSubtext.innerText = "FINAL SECONDS!";
+                } else {
+                    timerCard.classList.add('state-work-active');
+                }
+
+            } else if (timerState === 'REST') {
+                stateText.innerText = "REST PHASE";
+                timerSubtext.innerText = "Recover & Breathe";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/20 text-brand-green border border-brand-green/40 flex items-center gap-2";
+                progressCircle.style.stroke = "#00E676";
+                bgGlow.className = "absolute -inset-10 bg-brand-green/10 blur-3xl rounded-full pointer-events-none opacity-50";
+                timerCard.classList.add('state-rest-active');
+
+            } else if (timerState === 'PAUSED') {
+                stateText.innerText = "PAUSED";
+                timerSubtext.innerText = "Timer Paused";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-700/50 text-gray-300 border border-gray-600 flex items-center gap-2";
+                progressCircle.style.stroke = "#9CA3AF";
+
+            } else if (timerState === 'COMPLETED') {
+                stateText.innerText = "COMPLETE!";
+                timerSubtext.innerText = "Great Session!";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/30 text-brand-green border border-brand-green flex items-center gap-2";
+                progressCircle.style.stroke = "#00E676";
+
+            } else { // STOPPED
+                stateText.innerText = "READY";
+                timerSubtext.innerText = "Press Start";
+                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-2";
+                progressCircle.style.stroke = "#FF2E55";
+            }
+
+            // 4. Update Start/Pause Button State
+            if (timerState === 'WORK' || timerState === 'REST' || timerState === 'WARMUP') {
+                startBtnText.innerText = "PAUSE";
+                startBtnIcon.className = "fa-solid fa-pause";
+                startBtn.className = "col-span-1 sm:w-44 py-3 sm:py-4 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-yellow-600 hover:to-amber-600 text-white font-orbitron font-extrabold text-base sm:text-xl rounded-2xl shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            } else {
+                startBtnText.innerText = timerState === 'PAUSED' ? "RESUME" : "START";
+                startBtnIcon.className = "fa-solid fa-play";
+                startBtn.className = "col-span-1 sm:w-44 py-3 sm:py-4 bg-gradient-to-r from-brand-red to-red-600 hover:from-red-600 hover:to-brand-red text-white font-orbitron font-extrabold text-base sm:text-xl rounded-2xl shadow-xl shadow-brand-red/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2";
+            }
+
+            // Render updated stats tab values
+            renderStatsDisplay();
+        }
+
+        function flashScreen(color) {
+            const overlay = document.getElementById('flashOverlay');
+            overlay.style.backgroundColor = color;
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+            }, 300);
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Handling user inputs, presets and configuration...
+           PRESETS & CONFIGURATION HANDLERS
+           =================================================================== */
+        function applyPreset(type) {
+            if (timerState !== 'STOPPED' && timerState !== 'PAUSED') {
+                if (!confirm("Reset current active workout to apply preset?")) return;
+            }
+
+            if (type === 'pro') {
+                config.roundTime = 180;
+                config.restTime = 60;
+                config.totalRounds = 12;
+                config.warmupTime = 10;
+            } else if (type === 'amateur') {
+                config.roundTime = 180;
+                config.restTime = 60;
+                config.totalRounds = 3;
+                config.warmupTime = 10;
+            } else if (type === 'mma') {
+                config.roundTime = 300;
+                config.restTime = 60;
+                config.totalRounds = 5;
+                config.warmupTime = 10;
+            } else if (type === 'tabata') {
+                config.roundTime = 20;
+                config.restTime = 10;
+                config.totalRounds = 8;
+                config.warmupTime = 5;
+            } else if (type === 'speed') {
+                config.roundTime = 120;
+                config.restTime = 45;
+                config.totalRounds = 6;
+                config.warmupTime = 10;
+            }
+
+            syncInputsWithConfig();
+            resetTimer();
+        }
+
+        function adjustSetting(key, delta) {
+            if (timerState !== 'STOPPED') return;
+
+            if (key === 'roundTime') {
+                config.roundTime = Math.max(5, config.roundTime + delta);
+            } else if (key === 'restTime') {
+                config.restTime = Math.max(5, config.restTime + delta);
+            } else if (key === 'totalRounds') {
+                config.totalRounds = Math.max(1, Math.min(99, config.totalRounds + delta));
+            } else if (key === 'warmupTime') {
+                config.warmupTime = Math.max(0, config.warmupTime + delta);
+            }
+
+            syncInputsWithConfig();
+            resetTimer();
+        }
+
+        function updateSettingsFromInputs() {
+            config.warningTime = parseInt(document.getElementById('warningSelect').value, 10);
+            config.voiceCoach = document.getElementById('voiceCoachToggle').checked;
+            config.trainerMode = document.getElementById('trainerToggle').checked;
+            config.calloutFreq = parseInt(document.getElementById('calloutFreqSlider').value, 10);
+            config.comboComplexity = document.getElementById('comboComplexitySelect').value;
+
+            document.getElementById('calloutFreqText').innerText = `Every ${config.calloutFreq - 2}-${config.calloutFreq + 2} sec`;
+            document.getElementById('trainerBanner').style.display = config.trainerMode ? 'block' : 'none';
+        }
+
+        function syncInputsWithConfig() {
+            document.getElementById('roundTimeVal').innerText = formatTime(config.roundTime);
+            document.getElementById('restTimeVal').innerText = formatTime(config.restTime);
+            document.getElementById('totalRoundsVal').innerText = config.totalRounds;
+            document.getElementById('warmupTimeVal').innerText = formatTime(config.warmupTime);
+            document.getElementById('warningSelect').value = config.warningTime;
+            document.getElementById('voiceCoachToggle').checked = config.voiceCoach;
+            document.getElementById('trainerToggle').checked = config.trainerMode;
+            document.getElementById('calloutFreqSlider').value = config.calloutFreq;
+            document.getElementById('comboComplexitySelect').value = config.comboComplexity;
+
+            document.getElementById('calloutFreqText').innerText = `Every ${config.calloutFreq - 2}-${config.calloutFreq + 2} sec`;
+            document.getElementById('trainerBanner').style.display = config.trainerMode ? 'block' : 'none';
+        }
+
+        /* ===================================================================
+           STREAMING_CHUNK:Managing workout history, screen lock, and shortcuts...
+           WORKOUT HISTORY & UTILITIES
+           =================================================================== */
+        function saveWorkoutSession() {
+            const session = {
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                rounds: config.totalRounds,
+                roundTime: formatTime(config.roundTime),
+                totalWorkMin: Math.round((config.roundTime * config.totalRounds) / 60)
+            };
+
+            workoutStats.history.unshift(session);
+            if (workoutStats.history.length > 20) workoutStats.history.pop();
+
+            try {
+                localStorage.setItem('boxing_timer_stats', JSON.stringify(workoutStats));
+            } catch (e) {
+                console.error("Storage error:", e);
+            }
+            renderStatsDisplay();
+        }
+
+        function clearWorkoutHistory() {
+            workoutStats = { totalWorkSeconds: 0, roundsCompleted: 0, sessionsCompleted: 0, history: [] };
+            localStorage.removeItem('boxing_timer_stats');
+            renderStatsDisplay();
+        }
+
+        function renderStatsDisplay() {
+            document.getElementById('statsTotalWork').innerText = formatTime(workoutStats.totalWorkSeconds);
+            document.getElementById('statsRoundsDone').innerText = workoutStats.roundsCompleted;
+            document.getElementById('statsSessions').innerText = workoutStats.sessionsCompleted;
+            
+            // Approx 11 kcal per minute of intense boxing
+            const totalMinutes = workoutStats.totalWorkSeconds / 60;
+            const estCalories = Math.round(totalMinutes * 11);
+            document.getElementById('statsCalories').innerText = `${estCalories} kcal`;
+
+            const historyList = document.getElementById('historyLogList');
+            if (workoutStats.history.length === 0) {
+                historyList.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">No completed sessions yet. Get to work!</div>`;
+                return;
+            }
+
+            historyList.innerHTML = workoutStats.history.map(item => `
+                <div class="bg-gray-900/60 p-2.5 rounded-xl border border-brand-border/60 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-gray-200 block">${item.rounds} Rounds (${item.roundTime} ea)</span>
+                        <span class="text-gray-400 text-[10px]">${item.date}</span>
+                    </div>
+                    <span class="font-orbitron font-bold text-brand-red">${item.totalWorkMin} mins</span>
+                </div>
+            `).join('');
+        }
+
+        // Screen Wake Lock API implementation
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    updateWakeLockUI(true);
+                    wakeLock.addEventListener('release', () => updateWakeLockUI(false));
+                }
+            } catch (err) {
+                console.log("WakeLock Error:", err);
+            }
+        }
+
+        function toggleWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                updateWakeLockUI(false);
+            } else {
+                requestWakeLock();
+            }
+        }
+
+        function updateWakeLockUI(active) {
+            const icon = document.getElementById('wakeLockIcon');
+            const text = document.getElementById('wakeLockText');
+            if (active) {
+                icon.className = "fa-solid fa-lightbulb text-brand-yellow";
+                text.innerText = "Screen Awake";
+            } else {
+                icon.className = "fa-solid fa-lightbulb text-gray-500";
+                text.innerText = "Screen Lock";
+            }
+        }
+
+        // Mute Toggle
+        function toggleMute() {
+            config.soundMuted = !config.soundMuted;
+            const btn = document.getElementById('soundIcon');
+            if (config.soundMuted) {
+                btn.className = "fa-solid fa-volume-xmark text-gray-500";
+            } else {
+                btn.className = "fa-solid fa-volume-high text-brand-green";
+            }
+        }
+
+        // Fullscreen Toggle
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log(e));
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Sidebar Tab Switcher
+        function switchTab(tabName) {
+            ['Settings', 'Trainer', 'Stats'].forEach(name => {
+                const tabEl = document.getElementById(`tab${name}`);
+                const btnEl = document.getElementById(`tab${name}Btn`);
+                
+                if (name.toLowerCase() === tabName) {
+                    tabEl.classList.remove('hidden');
+                    btnEl.classList.add('border-brand-red', 'text-white');
+                    btnEl.classList.remove('border-transparent', 'text-gray-400');
+                } else {
+                    tabEl.classList.add('hidden');
+                    btnEl.classList.remove('border-brand-red', 'text-white');
+                    btnEl.classList.add('border-transparent', 'text-gray-400');
+                }
+            });
+        }
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleStartPause();
+            } else if (e.code === 'KeyR') {
+                resetTimer();
+            } else if (e.code === 'KeyN') {
+                nextPhase();
+            }
+        });
+
+        /* ===================================================================
+           INITIALIZATION ON PAGE LOAD
+           =================================================================== */
+        window.onload = function() {
+            syncInputsWithConfig();
+            resetTimer();
+            renderStatsDisplay();
+        };
+    </script>
+</body>
+</html>
