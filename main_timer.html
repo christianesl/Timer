@@ -6,13 +6,13 @@
     <title>Boxing Timer Pro - Advanced Interval & Sparring Timer</title>
 
     <!-- Tailwind CSS -->
-    <script src="./vendor/tailwindcss.js"></script>
+    <script src="./www/vendor/tailwindcss.js"></script>
 
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="./vendor/fontawesome.css">
+    <link rel="stylesheet" href="./www/vendor/fontawesome.css">
 
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="./vendor/fonts.css">
+    <link rel="stylesheet" href="./www/vendor/fonts.css">
 
     <script>
         tailwind.config = {
@@ -159,9 +159,6 @@
                 <button onclick="applyPreset('mma')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
                     <i class="fa-solid fa-shield-halved text-brand-purple"></i> MMA (5x5m)
                 </button>
-                <button onclick="applyPreset('tabata')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-brand-green"></i> HIIT Tabata (8x20s)
-                </button>
                 <button onclick="applyPreset('speed')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
                     <i class="fa-solid fa-stopwatch text-cyan-400"></i> Speed Bag (6x2m)
                 </button>
@@ -219,16 +216,6 @@
                     </div>
                 </div>
 
-                <!-- LIVE COMBO / CALLOUT BANNER (Trainer Mode) -->
-                <div id="trainerBanner" class="w-full my-3 p-3 rounded-2xl bg-gray-900/80 border border-brand-purple/40 text-center z-10 transition-all">
-                    <div class="flex items-center justify-center gap-2 text-xs font-bold text-brand-purple tracking-widest uppercase mb-1">
-                        <i class="fa-solid fa-headset"></i> Audio Trainer Callout
-                    </div>
-                    <div id="comboDisplay" class="font-orbitron font-extrabold text-lg sm:text-2xl text-yellow-400 tracking-wide">
-                        "1 - 2 - HEAD SLIP - 3"
-                    </div>
-                </div>
-
                 <!-- MAIN CONTROLS ACTION BUTTONS -->
                 <div class="w-full grid grid-cols-3 sm:flex items-center justify-center gap-3 mt-4 z-10">
                     <!-- Reset Button -->
@@ -262,9 +249,6 @@
                     <div class="flex border-b border-brand-border pb-3 mb-5 gap-4">
                         <button id="tabSettingsBtn" onclick="switchTab('settings')" class="text-sm font-bold pb-2 border-b-2 border-brand-red text-white transition flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-brand-red"></i> Settings
-                        </button>
-                        <button id="tabTrainerBtn" onclick="switchTab('trainer')" class="text-sm font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition flex items-center gap-2">
-                            <i class="fa-solid fa-dumbbell text-brand-purple"></i> Trainer Drills
                         </button>
                         <button id="tabStatsBtn" onclick="switchTab('stats')" class="text-sm font-bold pb-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition flex items-center gap-2">
                             <i class="fa-solid fa-chart-simple text-brand-green"></i> History
@@ -338,64 +322,9 @@
                                 <option value="0">Disabled</option>
                             </select>
                         </div>
-
-                        <!-- Audio Voice Coach Toggle -->
-                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
-                            <div>
-                                <label class="text-sm font-bold text-gray-200 block">Voice Coach</label>
-                                <span class="text-xs text-gray-400">Announces rounds and warnings</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="voiceCoachToggle" checked onchange="updateSettingsFromInputs()" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
-                            </label>
-                        </div>
                     </div>
 
-                    <!-- TAB 2: TRAINER DRILL MODE -->
-                    <div id="tabTrainer" class="space-y-4 hidden">
-                        <div class="p-3 bg-brand-purple/10 border border-brand-purple/30 rounded-2xl text-xs text-brand-purple">
-                            <i class="fa-solid fa-circle-info mr-1"></i> Trainer Callout mode plays dynamic audio & visual punch combinations during active work rounds!
-                        </div>
-
-                        <!-- Toggle Trainer Mode -->
-                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 flex items-center justify-between">
-                            <div>
-                                <label class="text-sm font-bold text-gray-200 block">Trainer Callouts</label>
-                                <span class="text-xs text-gray-400">Random audio drill calls</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="trainerToggle" onchange="updateSettingsFromInputs()" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-purple"></div>
-                            </label>
-                        </div>
-
-                        <!-- Callout Interval Frequency -->
-                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <label class="text-sm font-bold text-gray-200">Callout Frequency</label>
-                                <span id="calloutFreqText" class="text-xs font-bold text-brand-purple">Every 8-12 sec</span>
-                            </div>
-                            <input type="range" id="calloutFreqSlider" min="4" max="20" value="10" onchange="updateSettingsFromInputs()" class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-brand-purple">
-                        </div>
-
-                        <!-- Combination Selection Preset -->
-                        <div class="bg-gray-900/60 p-3.5 rounded-2xl border border-brand-border/60 space-y-2">
-                            <label class="text-sm font-bold text-gray-200 block">Combo Complexity</label>
-                            <select id="comboComplexitySelect" onchange="updateSettingsFromInputs()" class="w-full bg-gray-800 border border-gray-700 text-xs font-bold text-gray-200 rounded-xl p-2.5 focus:outline-none">
-                                <option value="basic">Basic Boxing (1-2, 1-1-2, 1-2-3)</option>
-                                <option value="intermediate" selected>Intermediate (Include Slips, Rolls & Body)</option>
-                                <option value="advanced">Advanced Pro (Fast 4-5 Punch Combos & Footwork)</option>
-                            </select>
-                        </div>
-
-                        <!-- Test Voice Callout Button -->
-                        <button onclick="testTrainerCallout()" class="w-full py-2.5 bg-brand-purple/20 hover:bg-brand-purple/30 text-brand-purple border border-brand-purple/40 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-volume-low"></i> Test Voice Callout
-                        </button>
-                    </div>
-
-                    <!-- TAB 3: WORKOUT HISTORY & STATS -->
+                    <!-- TAB 2: WORKOUT HISTORY & STATS -->
                     <div id="tabStats" class="space-y-4 hidden">
                         <!-- Stats Grid -->
                         <div class="grid grid-cols-2 gap-3">
@@ -441,7 +370,6 @@
         <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-2">
             <p>© Boxing Timer Pro - Built for Fighters, Martial Artists & Gyms.</p>
             <div class="flex items-center gap-4">
-                <span class="flex items-center gap-1"><i class="fa-solid fa-volume-high text-brand-green"></i> Web Audio Synth</span>
                 <span class="flex items-center gap-1"><i class="fa-solid fa-shield-halved text-brand-red"></i> Offline Ready</span>
             </div>
         </div>
@@ -460,10 +388,6 @@
             totalRounds: 12,     // 12 rounds
             warmupTime: 10,      // 10s warmup
             warningTime: 10,     // 10s warning clap
-            voiceCoach: true,    // Speech synthesis enabled
-            trainerMode: false,  // Dynamic callouts
-            calloutFreq: 10,     // Interval frequency seconds
-            comboComplexity: 'intermediate',
             soundMuted: false
         };
 
@@ -476,8 +400,8 @@
         let timeRemaining = config.warmupTime;
         let totalPhaseDuration = config.warmupTime;
         let timerInterval = null;
-        let trainerCalloutTimeout = null;
         let wakeLock = null;
+        let wakeLockRequested = false;
 
         // Stats tracking
         let workoutStats = {
@@ -606,90 +530,7 @@
             }
         }
 
-        // Voice Coach Announcement using Web Speech API
-        function speak(text) {
-            if (config.soundMuted || !config.voiceCoach) return;
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Stop any pending speech
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 1.1; // Energetic pacing
-                utterance.pitch = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
         /* ===================================================================
-           STREAMING_CHUNK:Implementing drill callout database & logic...
-           TRAINER DRILL COMBINATION DATABASE
-           =================================================================== */
-        const COMBOS = {
-            basic: [
-                "1 - 2",
-                "1 - 1 - 2",
-                "1 - 2 - 3",
-                "Double Jab",
-                "Jab - Cross",
-                "1 - 2 - Body Shot"
-            ],
-            intermediate: [
-                "1 - 2 - Slip Left - 3",
-                "1 - 2 - Roll Right - 2",
-                "1 - Body - 2 - Head",
-                "Jab - Lead Upper - Cross",
-                "1 - 2 - 3 - Low Kick",
-                "Pace Up! 10 Seconds Fast!"
-            ],
-            advanced: [
-                "1 - 2 - 3 - 2 - Slip - 2",
-                "Lead Upper - Cross - Lead Hook - Roll",
-                "1 - 2 - Body Hook - Head Hook - Pivot",
-                "Fast 4 Punches - Step Back - 2",
-                "Burpees! 5 Seconds!",
-                "1 - 2 - 5 - 6 - 3"
-            ]
-        };
-
-        function triggerTrainerCallout() {
-            if (timerState !== 'WORK' || !config.trainerMode) return;
-
-            const list = COMBOS[config.comboComplexity] || COMBOS.intermediate;
-            const randomCombo = list[Math.floor(Math.random() * list.length)];
-
-            // Visual display update
-            const comboEl = document.getElementById('comboDisplay');
-            comboEl.innerText = `"${randomCombo}"`;
-            comboEl.classList.add('text-brand-yellow', 'scale-105');
-            setTimeout(() => comboEl.classList.remove('scale-105'), 300);
-
-            // Audio Speech
-            speak(randomCombo);
-
-            // Schedule next callout
-            scheduleNextCallout();
-        }
-
-        function scheduleNextCallout() {
-            if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
-            if (timerState === 'WORK' && config.trainerMode) {
-                // Randomize variation around configured frequency (+/- 25%)
-                const base = config.calloutFreq;
-                const jitter = (Math.random() * 0.5 - 0.25) * base;
-                const delayMs = Math.max(3, base + jitter) * 1000;
-
-                trainerCalloutTimeout = setTimeout(triggerTrainerCallout, delayMs);
-            }
-        }
-
-        function testTrainerCallout() {
-            getAudioContext();
-            const list = COMBOS[config.comboComplexity];
-            const sample = list[Math.floor(Math.random() * list.length)];
-            document.getElementById('comboDisplay').innerText = `"${sample}"`;
-            speak(sample);
-        }
-
-        /* ===================================================================
-           STREAMING_CHUNK:Implementing main timer engine & transitions...
            TIMER ENGINE & STATE MACHINE
            =================================================================== */
         function startTimerEngine() {
@@ -704,7 +545,6 @@
                 if (config.warningTime > 0 && timeRemaining === config.warningTime) {
                     if (timerState === 'WORK') {
                         playClapperSound();
-                        speak("10 seconds!");
                         flashScreen('rgba(255, 184, 0, 0.2)');
                     }
                 }
@@ -725,9 +565,7 @@
                 timeRemaining = config.roundTime;
                 totalPhaseDuration = config.roundTime;
                 playGongSound();
-                speak(`Round ${currentRound}`);
                 flashScreen('rgba(255, 46, 85, 0.3)');
-                scheduleNextCallout();
 
             } else if (timerState === 'WORK') {
                 // Track stats
@@ -740,7 +578,6 @@
                     timeRemaining = 0;
                     playGongSound();
                     setTimeout(playGongSound, 500);
-                    speak("Workout Complete! Great job!");
                     workoutStats.sessionsCompleted++;
                     saveWorkoutSession();
                     flashScreen('rgba(0, 230, 118, 0.4)');
@@ -751,7 +588,6 @@
                     timeRemaining = config.restTime;
                     totalPhaseDuration = config.restTime;
                     playGongSound();
-                    speak("Rest");
                     flashScreen('rgba(0, 230, 118, 0.25)');
                 }
 
@@ -762,9 +598,7 @@
                 timeRemaining = config.roundTime;
                 totalPhaseDuration = config.roundTime;
                 playGongSound();
-                speak(`Round ${currentRound}`);
                 flashScreen('rgba(255, 46, 85, 0.3)');
-                scheduleNextCallout();
             }
 
             updateUI();
@@ -780,14 +614,11 @@
                     timerState = 'WARMUP';
                     timeRemaining = config.warmupTime;
                     totalPhaseDuration = config.warmupTime;
-                    speak("Get Ready");
                 } else {
                     timerState = 'WORK';
                     timeRemaining = config.roundTime;
                     totalPhaseDuration = config.roundTime;
                     playGongSound();
-                    speak("Round 1");
-                    scheduleNextCallout();
                 }
                 startTimerEngine();
                 requestWakeLock();
@@ -796,22 +627,85 @@
                 // Resume
                 timerState = previousStateBeforePause;
                 startTimerEngine();
-                if (timerState === 'WORK') scheduleNextCallout();
                 requestWakeLock();
 
             } else {
                 // Pause
                 previousStateBeforePause = timerState;
                 timerState = 'PAUSED';
-                if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
             }
 
             updateUI();
         }
 
+        function updateWakeLockUI(isActive, isUnsupported = false) {
+            const button = document.getElementById('wakeLockBtn');
+            const icon = document.getElementById('wakeLockIcon');
+            const text = document.getElementById('wakeLockText');
+
+            if (isUnsupported) {
+                icon.className = 'fa-solid fa-lightbulb text-gray-600';
+                text.textContent = 'Unavailable';
+                button.title = 'Screen Lock is not supported in this browser';
+                return;
+            }
+
+            icon.className = isActive
+                ? 'fa-solid fa-lightbulb text-brand-yellow'
+                : 'fa-solid fa-lightbulb text-gray-500';
+            text.textContent = isActive ? 'Screen Awake' : 'Screen Lock';
+            button.title = isActive ? 'Allow the screen to lock' : 'Keep the screen awake';
+        }
+
+        async function requestWakeLock() {
+            wakeLockRequested = true;
+
+            if (!('wakeLock' in navigator)) {
+                updateWakeLockUI(false, true);
+                return;
+            }
+
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    wakeLock = null;
+                    updateWakeLockUI(false);
+                });
+                updateWakeLockUI(true);
+            } catch (error) {
+                wakeLock = null;
+                updateWakeLockUI(false);
+                console.warn('Could not enable Screen Lock:', error);
+            }
+        }
+
+        async function releaseWakeLock() {
+            wakeLockRequested = false;
+            if (wakeLock) {
+                await wakeLock.release();
+                wakeLock = null;
+            }
+            updateWakeLockUI(false);
+        }
+
+        function toggleWakeLock() {
+            if (wakeLockRequested) {
+                releaseWakeLock();
+            } else {
+                requestWakeLock();
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && wakeLockRequested && !wakeLock) {
+                requestWakeLock();
+            }
+        });
+
         function resetTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            if (trainerCalloutTimeout) clearTimeout(trainerCalloutTimeout);
+
+            releaseWakeLock();
 
             timerState = 'STOPPED';
             currentRound = 1;
@@ -822,15 +716,11 @@
         }
 
         function nextPhase() {
-            if (timerState === 'STOPPED') return;
+            if (timerState === 'STOPPED' || timerState === 'COMPLETED') return;
             getAudioContext();
             advancePhase();
         }
 
-        /* ===================================================================
-           STREAMING_CHUNK:Updating visual UI elements & canvas progress...
-           VISUAL UI RENDERING & CONTROLS
-           =================================================================== */
         function formatTime(seconds) {
             const mins = Math.floor(Math.max(0, seconds) / 60);
             const secs = Math.max(0, seconds) % 60;
@@ -850,82 +740,54 @@
             const startBtnText = document.getElementById('startBtnText');
             const startBtnIcon = document.getElementById('startBtnIcon');
             const startBtn = document.getElementById('startBtn');
+            const progressRatio = totalPhaseDuration > 0 ? timeRemaining / totalPhaseDuration : 0;
 
-            // 1. Digital Time Text
             timerDisplay.innerText = formatTime(timeRemaining);
             currentRoundDisplay.innerText = currentRound;
             totalRoundsDisplay.innerText = config.totalRounds;
-
-            // 2. Circle Progress Stroke
-            // Radial Circumference = 2 * PI * 95 ≈ 596.9
-            const circumference = 596.9;
-            const progressRatio = totalPhaseDuration > 0 ? timeRemaining / totalPhaseDuration : 0;
-            const strokeOffset = circumference - (progressRatio * circumference);
-            progressCircle.style.strokeDashoffset = strokeOffset;
-
-            // 3. State Styling & Dynamic Theme Color Swaps
+            progressCircle.style.strokeDashoffset = 596.9 - (progressRatio * 596.9);
             timerCard.classList.remove('state-work-active', 'state-rest-active', 'state-warning-active');
 
             if (timerState === 'WARMUP') {
-                stateText.innerText = "GET READY";
-                timerSubtext.innerText = "Prepare for Round 1";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-yellow-500/20 text-brand-yellow border border-brand-yellow/40 flex items-center gap-2";
-                progressCircle.style.stroke = "#FFB800";
-                bgGlow.className = "absolute -inset-10 bg-brand-yellow/10 blur-3xl rounded-full pointer-events-none opacity-50";
-
+                stateText.innerText = 'GET READY';
+                timerSubtext.innerText = 'Prepare for Round 1';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-yellow-500/20 text-brand-yellow border border-brand-yellow/40 flex items-center gap-2';
+                progressCircle.style.stroke = '#FFB800';
+                bgGlow.className = 'absolute -inset-10 bg-brand-yellow/10 blur-3xl rounded-full pointer-events-none opacity-50';
             } else if (timerState === 'WORK') {
                 stateText.innerText = `ROUND ${currentRound}`;
-                timerSubtext.innerText = "FIGHT!";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-red/20 text-brand-red border border-brand-red/40 flex items-center gap-2";
-                progressCircle.style.stroke = "#FF2E55";
-                bgGlow.className = "absolute -inset-10 bg-brand-red/15 blur-3xl rounded-full pointer-events-none opacity-60";
-
-                if (timeRemaining <= config.warningTime && config.warningTime > 0) {
-                    timerCard.classList.add('state-warning-active');
-                    timerSubtext.innerText = "FINAL SECONDS!";
-                } else {
-                    timerCard.classList.add('state-work-active');
-                }
-
+                timerSubtext.innerText = timeRemaining <= config.warningTime && config.warningTime > 0 ? 'FINAL SECONDS!' : 'FIGHT!';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-red/20 text-brand-red border border-brand-red/40 flex items-center gap-2';
+                progressCircle.style.stroke = '#FF2E55';
+                bgGlow.className = 'absolute -inset-10 bg-brand-red/15 blur-3xl rounded-full pointer-events-none opacity-60';
+                timerCard.classList.add(timeRemaining <= config.warningTime && config.warningTime > 0 ? 'state-warning-active' : 'state-work-active');
             } else if (timerState === 'REST') {
-                stateText.innerText = "REST PHASE";
-                timerSubtext.innerText = "Recover & Breathe";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/20 text-brand-green border border-brand-green/40 flex items-center gap-2";
-                progressCircle.style.stroke = "#00E676";
-                bgGlow.className = "absolute -inset-10 bg-brand-green/10 blur-3xl rounded-full pointer-events-none opacity-50";
+                stateText.innerText = 'REST PHASE';
+                timerSubtext.innerText = 'Recover & Breathe';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/20 text-brand-green border border-brand-green/40 flex items-center gap-2';
+                progressCircle.style.stroke = '#00E676';
+                bgGlow.className = 'absolute -inset-10 bg-brand-green/10 blur-3xl rounded-full pointer-events-none opacity-50';
                 timerCard.classList.add('state-rest-active');
-
             } else if (timerState === 'PAUSED') {
-                stateText.innerText = "PAUSED";
-                timerSubtext.innerText = "Timer Paused";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-700/50 text-gray-300 border border-gray-600 flex items-center gap-2";
-                progressCircle.style.stroke = "#9CA3AF";
-
+                stateText.innerText = 'PAUSED';
+                timerSubtext.innerText = 'Timer Paused';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-700/50 text-gray-300 border border-gray-600 flex items-center gap-2';
+                progressCircle.style.stroke = '#9CA3AF';
             } else if (timerState === 'COMPLETED') {
-                stateText.innerText = "COMPLETE!";
-                timerSubtext.innerText = "Great Session!";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/30 text-brand-green border border-brand-green flex items-center gap-2";
-                progressCircle.style.stroke = "#00E676";
-
-            } else { // STOPPED
-                stateText.innerText = "READY";
-                timerSubtext.innerText = "Press Start";
-                statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-2";
-                progressCircle.style.stroke = "#FF2E55";
-            }
-
-            // 4. Update Start/Pause Button State
-            if (timerState === 'WORK' || timerState === 'REST' || timerState === 'WARMUP') {
-                startBtnText.innerText = "PAUSE";
-                startBtnIcon.className = "fa-solid fa-pause";
-                startBtn.className = "col-span-1 sm:w-44 py-3 sm:py-4 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-yellow-600 hover:to-amber-600 text-white font-orbitron font-extrabold text-base sm:text-xl rounded-2xl shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+                stateText.innerText = 'COMPLETE!';
+                timerSubtext.innerText = 'Great Session!';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-green/30 text-brand-green border border-brand-green flex items-center gap-2';
+                progressCircle.style.stroke = '#00E676';
             } else {
-                startBtnText.innerText = timerState === 'PAUSED' ? "RESUME" : "START";
-                startBtnIcon.className = "fa-solid fa-play";
-                startBtn.className = "col-span-1 sm:w-44 py-3 sm:py-4 bg-gradient-to-r from-brand-red to-red-600 hover:from-red-600 hover:to-brand-red text-white font-orbitron font-extrabold text-base sm:text-xl rounded-2xl shadow-xl shadow-brand-red/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2";
+                stateText.innerText = 'READY';
+                timerSubtext.innerText = 'Press Start';
+                statePill.className = 'px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-2';
+                progressCircle.style.stroke = '#FF2E55';
             }
 
-            // Render updated stats tab values
+            const isRunning = ['WARMUP', 'WORK', 'REST'].includes(timerState);
+            startBtnText.innerText = isRunning ? 'PAUSE' : (timerState === 'PAUSED' ? 'RESUME' : 'START');
+            startBtnIcon.className = isRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
             renderStatsDisplay();
         }
 
@@ -933,13 +795,10 @@
             const overlay = document.getElementById('flashOverlay');
             overlay.style.backgroundColor = color;
             overlay.style.opacity = '1';
-            setTimeout(() => {
-                overlay.style.opacity = '0';
-            }, 300);
+            setTimeout(() => { overlay.style.opacity = '0'; }, 300);
         }
 
         /* ===================================================================
-           STREAMING_CHUNK:Handling user inputs, presets and configuration...
            PRESETS & CONFIGURATION HANDLERS
            =================================================================== */
         function applyPreset(type) {
@@ -962,11 +821,6 @@
                 config.restTime = 60;
                 config.totalRounds = 5;
                 config.warmupTime = 10;
-            } else if (type === 'tabata') {
-                config.roundTime = 20;
-                config.restTime = 10;
-                config.totalRounds = 8;
-                config.warmupTime = 5;
             } else if (type === 'speed') {
                 config.roundTime = 120;
                 config.restTime = 45;
@@ -981,15 +835,10 @@
         function adjustSetting(key, delta) {
             if (timerState !== 'STOPPED') return;
 
-            if (key === 'roundTime') {
-                config.roundTime = Math.max(5, config.roundTime + delta);
-            } else if (key === 'restTime') {
-                config.restTime = Math.max(5, config.restTime + delta);
-            } else if (key === 'totalRounds') {
-                config.totalRounds = Math.max(1, Math.min(99, config.totalRounds + delta));
-            } else if (key === 'warmupTime') {
-                config.warmupTime = Math.max(0, config.warmupTime + delta);
-            }
+            if (key === 'roundTime') config.roundTime = Math.max(5, config.roundTime + delta);
+            if (key === 'restTime') config.restTime = Math.max(5, config.restTime + delta);
+            if (key === 'totalRounds') config.totalRounds = Math.max(1, Math.min(99, config.totalRounds + delta));
+            if (key === 'warmupTime') config.warmupTime = Math.max(0, config.warmupTime + delta);
 
             syncInputsWithConfig();
             resetTimer();
@@ -997,13 +846,6 @@
 
         function updateSettingsFromInputs() {
             config.warningTime = parseInt(document.getElementById('warningSelect').value, 10);
-            config.voiceCoach = document.getElementById('voiceCoachToggle').checked;
-            config.trainerMode = document.getElementById('trainerToggle').checked;
-            config.calloutFreq = parseInt(document.getElementById('calloutFreqSlider').value, 10);
-            config.comboComplexity = document.getElementById('comboComplexitySelect').value;
-
-            document.getElementById('calloutFreqText').innerText = `Every ${config.calloutFreq - 2}-${config.calloutFreq + 2} sec`;
-            document.getElementById('trainerBanner').style.display = config.trainerMode ? 'block' : 'none';
         }
 
         function syncInputsWithConfig() {
@@ -1012,36 +854,21 @@
             document.getElementById('totalRoundsVal').innerText = config.totalRounds;
             document.getElementById('warmupTimeVal').innerText = formatTime(config.warmupTime);
             document.getElementById('warningSelect').value = config.warningTime;
-            document.getElementById('voiceCoachToggle').checked = config.voiceCoach;
-            document.getElementById('trainerToggle').checked = config.trainerMode;
-            document.getElementById('calloutFreqSlider').value = config.calloutFreq;
-            document.getElementById('comboComplexitySelect').value = config.comboComplexity;
-
-            document.getElementById('calloutFreqText').innerText = `Every ${config.calloutFreq - 2}-${config.calloutFreq + 2} sec`;
-            document.getElementById('trainerBanner').style.display = config.trainerMode ? 'block' : 'none';
         }
 
-        /* ===================================================================
-           STREAMING_CHUNK:Managing workout history, screen lock, and shortcuts...
-           WORKOUT HISTORY & UTILITIES
-           =================================================================== */
         function saveWorkoutSession() {
-            const session = {
+            workoutStats.history.unshift({
                 date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 rounds: config.totalRounds,
                 roundTime: formatTime(config.roundTime),
                 totalWorkMin: Math.round((config.roundTime * config.totalRounds) / 60)
-            };
-
-            workoutStats.history.unshift(session);
+            });
             if (workoutStats.history.length > 20) workoutStats.history.pop();
-
             try {
                 localStorage.setItem('boxing_timer_stats', JSON.stringify(workoutStats));
-            } catch (e) {
-                console.error("Storage error:", e);
+            } catch (error) {
+                console.error('Storage error:', error);
             }
-            renderStatsDisplay();
         }
 
         function clearWorkoutHistory() {
@@ -1054,87 +881,34 @@
             document.getElementById('statsTotalWork').innerText = formatTime(workoutStats.totalWorkSeconds);
             document.getElementById('statsRoundsDone').innerText = workoutStats.roundsCompleted;
             document.getElementById('statsSessions').innerText = workoutStats.sessionsCompleted;
-
-            // Approx 11 kcal per minute of intense boxing
-            const totalMinutes = workoutStats.totalWorkSeconds / 60;
-            const estCalories = Math.round(totalMinutes * 11);
-            document.getElementById('statsCalories').innerText = `${estCalories} kcal`;
-
+            document.getElementById('statsCalories').innerText = `${Math.round((workoutStats.totalWorkSeconds / 60) * 11)} kcal`;
             const historyList = document.getElementById('historyLogList');
-            if (workoutStats.history.length === 0) {
-                historyList.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">No completed sessions yet. Get to work!</div>`;
-                return;
-            }
-
-            historyList.innerHTML = workoutStats.history.map(item => `
-                <div class="bg-gray-900/60 p-2.5 rounded-xl border border-brand-border/60 flex items-center justify-between text-xs">
-                    <div>
-                        <span class="font-bold text-gray-200 block">${item.rounds} Rounds (${item.roundTime} ea)</span>
-                        <span class="text-gray-400 text-[10px]">${item.date}</span>
-                    </div>
-                    <span class="font-orbitron font-bold text-brand-red">${item.totalWorkMin} mins</span>
-                </div>
-            `).join('');
+            historyList.innerHTML = workoutStats.history.length
+                ? workoutStats.history.map(item => `<div class="bg-gray-900/60 p-2.5 rounded-xl border border-brand-border/60 flex items-center justify-between text-xs"><div><span class="font-bold text-gray-200 block">${item.rounds} Rounds (${item.roundTime} ea)</span><span class="text-gray-400 text-[10px]">${item.date}</span></div><span class="font-orbitron font-bold text-brand-red">${item.totalWorkMin} mins</span></div>`).join('')
+                : '<div class="text-xs text-gray-500 text-center py-4">No completed sessions yet. Get to work!</div>';
         }
 
-        // Screen Wake Lock API implementation
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    updateWakeLockUI(true);
-                    wakeLock.addEventListener('release', () => updateWakeLockUI(false));
-                }
-            } catch (err) {
-                console.log("WakeLock Error:", err);
-            }
-        }
-
-        function toggleWakeLock() {
-            if (wakeLock) {
-                wakeLock.release();
-                wakeLock = null;
-                updateWakeLockUI(false);
-            } else {
-                requestWakeLock();
-            }
-        }
-
-        function updateWakeLockUI(active) {
-            const icon = document.getElementById('wakeLockIcon');
-            const text = document.getElementById('wakeLockText');
-            if (active) {
-                icon.className = "fa-solid fa-lightbulb text-brand-yellow";
-                text.innerText = "Screen Awake";
-            } else {
-                icon.className = "fa-solid fa-lightbulb text-gray-500";
-                text.innerText = "Screen Lock";
-            }
-        }
-
-        // Mute Toggle
         function toggleMute() {
             config.soundMuted = !config.soundMuted;
-            const btn = document.getElementById('soundIcon');
-            if (config.soundMuted) {
-                btn.className = "fa-solid fa-volume-xmark text-gray-500";
-            } else {
-                btn.className = "fa-solid fa-volume-high text-brand-green";
-            }
+            document.getElementById('soundIcon').className = config.soundMuted
+                ? 'fa-solid fa-volume-xmark text-gray-500'
+                : 'fa-solid fa-volume-high text-brand-green';
         }
 
-        // Fullscreen Toggle
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(e => console.log(e));
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
+                document.documentElement.requestFullscreen().catch(error => console.warn('Fullscreen error:', error));
+            } else if (document.exitFullscreen) {
+                document.exitFullscreen();
             }
         }
 
+        /* ===================================================================
+           WORKOUT HISTORY & UTILITIES
+           =================================================================== */
         // Sidebar Tab Switcher
         function switchTab(tabName) {
-            ['Settings', 'Trainer', 'Stats'].forEach(name => {
+            ['Settings', 'Stats'].forEach(name => {
                 const tabEl = document.getElementById(`tab${name}`);
                 const btnEl = document.getElementById(`tab${name}Btn`);
 

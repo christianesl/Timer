@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabata & Interval Timer</title>
+  <!-- Tailwind CSS -->
+  <script src="./vendor/tailwindcss.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="./vendor/fontawesome.css">
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="./vendor/fonts.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Oswald', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      touch-action: manipulation;
+    }
+
+    .font-timer {
+      font-family: 'Oswald', sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-ring__circle {
+      transition: stroke-dashoffset 0.35s linear;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    .phase-prep {
+      --phase-color: #f59e0b;
+      --phase-bg: rgba(245, 158, 11, 0.1);
+      --phase-border: rgba(245, 158, 11, 0.3);
+    }
+    .phase-exercise {
+      --phase-color: #10b981;
+      --phase-bg: rgba(16, 185, 129, 0.12);
+      --phase-border: rgba(16, 185, 129, 0.4);
+    }
+    .phase-rest {
+      --phase-color: #06b6d4;
+      --phase-bg: rgba(6, 182, 212, 0.1);
+      --phase-border: rgba(6, 182, 212, 0.3);
+    }
+    .phase-roundrest {
+      --phase-color: #a855f7;
+      --phase-bg: rgba(168, 85, 247, 0.12);
+      --phase-border: rgba(168, 85, 247, 0.4);
+    }
+
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .pulse-subtle {
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+
+    /* Hide scrollbars for clean mobile interface */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 select-none bg-slate-950 text-slate-100">
+
+  <!-- Top Navigation Header -->
+  <header class="w-full max-w-xl flex items-center justify-between py-3 px-4 rounded-2xl glass-card mb-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+        <i class="fa-solid fa-[#fa2d48] fa-stopwatch text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight leading-none text-white">Tabata Timer</h1>
+        <p class="text-xs text-slate-400 mt-0.5" id="headerSummaryText">Total: 04:00 • 16 Intervals</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <!-- Sound Toggle -->
+      <button id="soundToggleBtn" onclick="toggleSound()" class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Toggle Audio Beeps">
+        <i id="soundIcon" class="fa-solid fa-volume-high text-base"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="w-full max-w-xl flex-1 flex flex-col justify-center">
+
+    <!-- CONFIGURATION SCREEN -->
+    <div id="configScreen" class="space-y-3.5 transition-all duration-300">
+
+      <!-- Quick Presets Selector Bar -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap pl-1">Presets:</span>
+        <button onclick="applyPreset('tabata')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 text-slate-200 transition whitespace-nowrap">
+          🔥 Tabata (20/10 x8)
+        </button>
+        <button onclick="applyPreset('hiit')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 text-slate-200 transition whitespace-nowrap">
+          ⚡ HIIT (30/15 x10)
+        </button>
+        <button onclick="applyPreset('emom')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 text-slate-200 transition whitespace-nowrap">
+          ⏱️ EMOM (50/10)
+        </button>
+        <button onclick="applyPreset('cardio')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 text-slate-200 transition whitespace-nowrap">
+          💪 Cardio (40/20)
+        </button>
+      </div>
+
+      <!-- Settings Cards List -->
+      <div class="space-y-2.5">
+
+        <!-- 1. PREPARE -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-amber-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+              <i class="fa-solid fa-[#f59e0b] fa-person-running text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Prepare</div>
+              <div class="text-xs text-slate-400">Get ready before start</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('prepare', -5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_prepare" class="text-xl font-bold font-timer text-amber-400">10</span>
+              <span class="text-xs text-slate-400 block -mt-1">sec</span>
+            </div>
+            <button onclick="changeValue('prepare', 5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. EXERCISE (Work) -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-emerald-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <i class="fa-solid fa-dumbbell text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Exercise</div>
+              <div class="text-xs text-slate-400">Work duration per exercise</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('exercise', -5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_exercise" class="text-xl font-bold font-timer text-emerald-400">20</span>
+              <span class="text-xs text-slate-400 block -mt-1">sec</span>
+            </div>
+            <button onclick="changeValue('exercise', 5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. REST -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-cyan-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+              <i class="fa-solid fa-heart-pulse text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Rest</div>
+              <div class="text-xs text-slate-400">Rest between exercises</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('rest', -5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_rest" class="text-xl font-bold font-timer text-cyan-400">10</span>
+              <span class="text-xs text-slate-400 block -mt-1">sec</span>
+            </div>
+            <button onclick="changeValue('rest', 5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. EXERCISES PER ROUND (Cycles) -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-indigo-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+              <i class="fa-solid fa-rotate text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Exercises per Round</div>
+              <div class="text-xs text-slate-400">Number of work intervals</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('exercisesPerRound', -1)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_exercisesPerRound" class="text-xl font-bold font-timer text-indigo-400">8</span>
+              <span class="text-xs text-slate-400 block -mt-1">count</span>
+            </div>
+            <button onclick="changeValue('exercisesPerRound', 1)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 5. ROUNDS (Sets) -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-purple-500">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+              <i class="fa-solid fa-layer-group text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Rounds</div>
+              <div class="text-xs text-slate-400">Total workout rounds</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('rounds', -1)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_rounds" class="text-xl font-bold font-timer text-purple-400">1</span>
+              <span class="text-xs text-slate-400 block -mt-1">rounds</span>
+            </div>
+            <button onclick="changeValue('rounds', 1)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. REST BETWEEN ROUNDS -->
+        <div class="glass-card rounded-2xl p-3.5 flex items-center justify-between border-l-4 border-l-pink-500" id="restBetweenRoundsCard">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center">
+              <i class="fa-solid fa-couch text-lg"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Rest Between Rounds</div>
+              <div class="text-xs text-slate-400">Long rest after round completes</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeValue('restBetweenRounds', -5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <div class="w-16 text-center">
+              <span id="val_restBetweenRounds" class="text-xl font-bold font-timer text-pink-400">30</span>
+              <span class="text-xs text-slate-400 block -mt-1">sec</span>
+            </div>
+            <button onclick="changeValue('restBetweenRounds', 5)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Start Workout Big Button -->
+      <button onclick="startWorkout()" class="w-full mt-4 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 text-white font-bold text-lg tracking-wider uppercase shadow-lg shadow-emerald-900/30 hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center space-x-3">
+        <i class="fa-solid fa-play text-xl"></i>
+        <span>Start Workout</span>
+      </button>
+
+    </div>
+
+    <!-- ACTIVE TIMER SCREEN (Hidden by default) -->
+    <div id="timerScreen" class="hidden flex-col items-center justify-between space-y-5 transition-all duration-300">
+
+      <!-- Current Phase Banner -->
+      <div id="phaseBanner" class="w-full py-3 px-6 rounded-2xl text-center border glass-card transition-all duration-500 flex flex-col items-center justify-center">
+        <div id="phaseSubtitle" class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-0.5">GET READY</div>
+        <div id="phaseTitle" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-amber-400">PREPARE</div>
+      </div>
+
+      <!-- Circular Progress Ring & Large Countdown -->
+      <div class="relative w-64 h-64 sm:w-72 sm:h-72 my-2 flex items-center justify-center">
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <!-- Background track circle -->
+          <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="6" class="text-slate-800" fill="none" />
+          <!-- Animated Progress Circle -->
+          <circle id="progressCircle" cx="50" cy="50" r="44" stroke="currentColor" stroke-width="6" stroke-linecap="round" class="text-emerald-500 progress-ring__circle" fill="none" stroke-dasharray="276.46" stroke-dashoffset="0" />
+        </svg>
+
+        <!-- Center Counter Display -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span id="intervalTimeDisplay" class="text-6xl sm:text-7xl font-bold font-timer tracking-tight text-white drop-shadow-md">00:10</span>
+          <span id="nextUpText" class="text-xs font-medium text-slate-400 mt-1 max-w-[180px] truncate">Next: EXERCISE (20s)</span>
+        </div>
+      </div>
+
+      <!-- Overall Workout Progress Bar & Stats HUD -->
+      <div class="w-full glass-card rounded-2xl p-4 space-y-3">
+        <!-- Progress Bar -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs text-slate-400 font-medium">
+            <span>Overall Progress</span>
+            <span id="overallPercentText">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="overallProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-300 w-0"></div>
+          </div>
+        </div>
+
+        <!-- HUD Statistics -->
+        <div class="grid grid-cols-3 gap-2 text-center pt-1">
+          <div class="bg-slate-800/60 rounded-xl p-2 border border-slate-700/50">
+            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Exercise</span>
+            <span id="hudExerciseText" class="text-base font-bold font-timer text-emerald-400">1 / 8</span>
+          </div>
+          <div class="bg-slate-800/60 rounded-xl p-2 border border-slate-700/50">
+            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Round</span>
+            <span id="hudRoundText" class="text-base font-bold font-timer text-purple-400">1 / 1</span>
+          </div>
+          <div class="bg-slate-800/60 rounded-xl p-2 border border-slate-700/50">
+            <span class="text-[10px] uppercase text-slate-400 block font-semibold">Remaining</span>
+            <span id="hudRemainingTimeText" class="text-base font-bold font-timer text-slate-200">04:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timer Controls Bar -->
+      <div class="flex items-center justify-center space-x-4 w-full pt-1">
+        <!-- Skip Previous -->
+        <button onclick="skipPrevInterval()" class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 active:scale-95 transition flex items-center justify-center" title="Previous Step">
+          <i class="fa-solid fa-backward-step text-lg"></i>
+        </button>
+
+        <!-- Play / Pause Main Button -->
+        <button id="playPauseBtn" onclick="togglePlayPause()" class="w-20 h-20 rounded-3xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/25 active:scale-95 transition flex items-center justify-center">
+          <i id="playPauseIcon" class="fa-solid fa-pause text-2xl"></i>
+        </button>
+
+        <!-- Skip Next -->
+        <button onclick="skipNextInterval()" class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 active:scale-95 transition flex items-center justify-center" title="Next Step">
+          <i class="fa-solid fa-forward-step text-lg"></i>
+        </button>
+
+        <!-- Stop / Reset Button -->
+        <button onclick="stopWorkout()" class="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 active:scale-95 transition flex items-center justify-center" title="End Workout">
+          <i class="fa-solid fa-square text-lg"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="w-full max-w-xl px-3 pb-4 text-center">
+    <a href="./index.html" class="text-xs text-slate-400 hover:text-white transition">Back to timer selection</a>
+  </footer>
+
+  <script>
+    // Configuration Default State
+    let config = {
+      prepare: 10,
+      exercise: 20,
+      rest: 10,
+      exercisesPerRound: 8,
+      rounds: 1,
+      restBetweenRounds: 30
+    };
+
+    // Predefined Workout Presets
+    const presets = {
+      tabata: { prepare: 10, exercise: 20, rest: 10, exercisesPerRound: 8, rounds: 1, restBetweenRounds: 30 },
+      hiit: { prepare: 10, exercise: 30, rest: 15, exercisesPerRound: 10, rounds: 2, restBetweenRounds: 45 },
+      emom: { prepare: 10, exercise: 50, rest: 10, exercisesPerRound: 6, rounds: 1, restBetweenRounds: 30 },
+      cardio: { prepare: 10, exercise: 40, rest: 20, exercisesPerRound: 6, rounds: 3, restBetweenRounds: 60 }
+    };
+
+    // Timer Runtime State Variables
+    let workoutPlan = []; // Sequence of steps [{phase, duration, title, round, exerciseIndex}]
+    let currentStepIndex = 0;
+    let stepTimeRemaining = 0;
+    let timerInterval = null;
+    let isPaused = false;
+    let totalWorkoutDuration = 0;
+    let totalElapsedWorkoutTime = 0;
+    let soundEnabled = true;
+
+    // Web Audio API Sound Synthesizer
+    let audioCtx = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Play synthesized beep tones
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudioContext();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'countdown') {
+          // Short high beep for 3, 2, 1
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now); // A5
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'work_start') {
+          // Energetic high start chime
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
+          gain.gain.setValueAtTime(0.5, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'rest_start') {
+          // Lower rest chime
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now); // A4
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'complete') {
+          // Fanfare tone
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+          gain.gain.setValueAtTime(0.5, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+          osc.start(now);
+          osc.stop(now + 0.7);
+        }
+      } catch (e) {
+        console.log('Audio playback error:', e);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const soundIcon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        soundIcon.className = 'fa-solid fa-volume-high text-base';
+      } else {
+        soundIcon.className = 'fa-solid fa-volume-xmark text-base text-rose-400';
+      }
+    }
+
+    // Adjust configuration numeric values
+    function changeValue(key, delta) {
+      if (key === 'exercisesPerRound' || key === 'rounds') {
+        config[key] = Math.max(1, config[key] + delta);
+      } else {
+        config[key] = Math.max(0, config[key] + delta);
+      }
+      updateConfigUI();
+    }
+
+    function applyPreset(presetKey) {
+      if (presets[presetKey]) {
+        config = { ...presets[presetKey] };
+        updateConfigUI();
+      }
+    }
+
+    function updateConfigUI() {
+      document.getElementById('val_prepare').innerText = config.prepare;
+      document.getElementById('val_exercise').innerText = config.exercise;
+      document.getElementById('val_rest').innerText = config.rest;
+      document.getElementById('val_exercisesPerRound').innerText = config.exercisesPerRound;
+      document.getElementById('val_rounds').innerText = config.rounds;
+      document.getElementById('val_restBetweenRounds').innerText = config.restBetweenRounds;
+
+      // Show/Hide Rest Between Rounds depending on total rounds
+      const restCard = document.getElementById('restBetweenRoundsCard');
+      if (config.rounds > 1) {
+        restCard.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        restCard.classList.add('opacity-40', 'pointer-events-none');
+      }
+
+      // Calculate total duration and intervals count based on diagram logic
+      const totalTime = calculateTotalWorkoutTime();
+      const totalIntervals = (config.exercisesPerRound * config.rounds);
+
+      document.getElementById('headerSummaryText').innerText =
+        `Total: ${formatTimeMMSS(totalTime)} • ${totalIntervals} ${totalIntervals === 1 ? 'interval' : 'intervals'}`;
+    }
+
+    function calculateTotalWorkoutTime() {
+      // Logic per diagram:
+      // Prepare time
+      // For each round (1 to K):
+      //   For each exercise (1 to N):
+      //     Exercise time
+      //     If exercise < N: add Rest
+      //     If exercise == N and round < K: add Rest Between Rounds
+      let total = config.prepare;
+
+      for (let r = 1; r <= config.rounds; r++) {
+        for (let e = 1; e <= config.exercisesPerRound; e++) {
+          total += config.exercise;
+          if (e < config.exercisesPerRound) {
+            total += config.rest;
+          } else if (r < config.rounds) {
+            total += config.restBetweenRounds;
+          }
+        }
+      }
+      return total;
+    }
+
+    function formatTimeMMSS(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function buildWorkoutSequence() {
+      workoutPlan = [];
+
+      // 1. Prepare Step
+      if (config.prepare > 0) {
+        workoutPlan.push({
+          phase: 'PREPARE',
+          subtitle: 'GET READY',
+          duration: config.prepare,
+          round: 1,
+          exerciseIndex: 0,
+          colorClass: 'phase-prep',
+          textColor: 'text-amber-400',
+          strokeColor: '#f59e0b'
+        });
+      }
+
+      // 2. Loop Rounds & Exercises
+      for (let r = 1; r <= config.rounds; r++) {
+        for (let e = 1; e <= config.exercisesPerRound; e++) {
+          // Exercise Step
+          workoutPlan.push({
+            phase: `EXERCISE ${e}/${config.exercisesPerRound}`,
+            subtitle: `PUSH HARD • ROUND ${r}/${config.rounds}`,
+            duration: config.exercise,
+            round: r,
+            exerciseIndex: e,
+            isExercise: true,
+            colorClass: 'phase-exercise',
+            textColor: 'text-emerald-400',
+            strokeColor: '#10b981'
+          });
+
+          // Rest or Rest Between Rounds Step
+          if (e < config.exercisesPerRound) {
+            if (config.rest > 0) {
+              workoutPlan.push({
+                phase: 'REST',
+                subtitle: `BREATHE & RECOVER • ROUND ${r}/${config.rounds}`,
+                duration: config.rest,
+                round: r,
+                exerciseIndex: e,
+                colorClass: 'phase-rest',
+                textColor: 'text-cyan-400',
+                strokeColor: '#06b6d4'
+              });
+            }
+          } else if (r < config.rounds) {
+            if (config.restBetweenRounds > 0) {
+              workoutPlan.push({
+                phase: 'REST BETWEEN ROUNDS',
+                subtitle: `RECOVER FOR ROUND ${r + 1}`,
+                duration: config.restBetweenRounds,
+                round: r,
+                exerciseIndex: e,
+                colorClass: 'phase-roundrest',
+                textColor: 'text-purple-400',
+                strokeColor: '#a855f7'
+              });
+            }
+          }
+        }
+      }
+
+      totalWorkoutDuration = calculateTotalWorkoutTime();
+    }
+
+    function startWorkout() {
+      initAudioContext();
+      buildWorkoutSequence();
+
+      if (workoutPlan.length === 0) return;
+
+      currentStepIndex = 0;
+      totalElapsedWorkoutTime = 0;
+      isPaused = false;
+
+      // Switch screen view
+      document.getElementById('configScreen').classList.add('hidden');
+      document.getElementById('timerScreen').classList.remove('hidden');
+      document.getElementById('timerScreen').classList.add('flex');
+
+      loadStep(currentStepIndex);
+      startTimerInterval();
+    }
+
+    function loadStep(index) {
+      if (index >= workoutPlan.length) {
+        completeWorkout();
+        return;
+      }
+
+      const step = workoutPlan[index];
+      stepTimeRemaining = step.duration;
+
+      // Update Phase Banner Styling
+      const banner = document.getElementById('phaseBanner');
+      banner.className = `w-full py-3 px-6 rounded-2xl text-center border glass-card transition-all duration-500 flex flex-col items-center justify-center ${step.colorClass}`;
+
+      document.getElementById('phaseTitle').innerText = step.phase;
+      document.getElementById('phaseTitle').className = `text-2xl sm:text-3xl font-extrabold tracking-tight ${step.textColor}`;
+      document.getElementById('phaseSubtitle').innerText = step.subtitle;
+
+      // Progress Circle stroke color
+      const progressCircle = document.getElementById('progressCircle');
+      progressCircle.setAttribute('stroke', step.strokeColor);
+
+      // Play start sound sound effect
+      if (step.isExercise) {
+        playSound('work_start');
+      } else if (step.phase === 'REST' || step.phase === 'REST BETWEEN ROUNDS') {
+        playSound('rest_start');
+      }
+
+      // Next Up Text Preview
+      if (index + 1 < workoutPlan.length) {
+        const nextStep = workoutPlan[index + 1];
+        document.getElementById('nextUpText').innerText = `Next: ${nextStep.phase} (${nextStep.duration}s)`;
+      } else {
+        document.getElementById('nextUpText').innerText = 'Final Interval!';
+      }
+
+      // Update HUD Numbers
+      document.getElementById('hudExerciseText').innerText = `${step.exerciseIndex || '-'}/${config.exercisesPerRound}`;
+      document.getElementById('hudRoundText').innerText = `${step.round}/${config.rounds}`;
+
+      updateStepDisplay();
+    }
+
+    function startTimerInterval() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        if (isPaused) return;
+
+        if (stepTimeRemaining > 0) {
+          // Play 3, 2, 1 countdown audio cue
+          if (stepTimeRemaining <= 3 && stepTimeRemaining > 0) {
+            playSound('countdown');
+          }
+
+          stepTimeRemaining--;
+          totalElapsedWorkoutTime++;
+          updateStepDisplay();
+
+          if (stepTimeRemaining === 0) {
+            currentStepIndex++;
+            if (currentStepIndex < workoutPlan.length) {
+              loadStep(currentStepIndex);
+            } else {
+              completeWorkout();
+            }
+          }
+        }
+      }, 1000);
+    }
+
+    function updateStepDisplay() {
+      const step = workoutPlan[currentStepIndex];
+      if (!step) return;
+
+      // Time Display MM:SS
+      document.getElementById('intervalTimeDisplay').innerText = formatTimeMMSS(stepTimeRemaining);
+
+      // Ring SVG offset calculation
+      const circle = document.getElementById('progressCircle');
+      const circumference = 2 * Math.PI * 44; // r=44 -> ~276.46
+      const fraction = stepTimeRemaining / step.duration;
+      const offset = circumference - (fraction * circumference);
+      circle.style.strokeDashoffset = offset;
+
+      // Overall Progress Bar & Remaining
+      const remainingOverall = Math.max(0, totalWorkoutDuration - totalElapsedWorkoutTime);
+      document.getElementById('hudRemainingTimeText').innerText = formatTimeMMSS(remainingOverall);
+
+      const percent = Math.min(100, Math.round((totalElapsedWorkoutTime / totalWorkoutDuration) * 100));
+      document.getElementById('overallPercentText').innerText = `${percent}%`;
+      document.getElementById('overallProgressBar').style.width = `${percent}%`;
+    }
+
+    function togglePlayPause() {
+      isPaused = !isPaused;
+      const btnIcon = document.getElementById('playPauseIcon');
+      if (isPaused) {
+        btnIcon.className = 'fa-solid fa-play text-2xl ml-1';
+      } else {
+        btnIcon.className = 'fa-solid fa-pause text-2xl';
+      }
+    }
+
+    function skipNextInterval() {
+      if (currentStepIndex < workoutPlan.length - 1) {
+        // Adjust total elapsed offset
+        const currentStep = workoutPlan[currentStepIndex];
+        totalElapsedWorkoutTime += stepTimeRemaining;
+        currentStepIndex++;
+        loadStep(currentStepIndex);
+      }
+    }
+
+    function skipPrevInterval() {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        // Recalculate total elapsed up to previous step start
+        let elapsed = 0;
+        for (let i = 0; i < currentStepIndex; i++) {
+          elapsed += workoutPlan[i].duration;
+        }
+        totalElapsedWorkoutTime = elapsed;
+        loadStep(currentStepIndex);
+      }
+    }
+
+    function completeWorkout() {
+      if (timerInterval) clearInterval(timerInterval);
+      playSound('complete');
+
+      document.getElementById('phaseTitle').innerText = 'WORKOUT DONE! 🎉';
+      document.getElementById('phaseTitle').className = 'text-2xl sm:text-3xl font-extrabold tracking-tight text-emerald-400';
+      document.getElementById('phaseSubtitle').innerText = 'CONGRATULATIONS!';
+      document.getElementById('intervalTimeDisplay').innerText = '00:00';
+      document.getElementById('overallProgressBar').style.width = '100%';
+      document.getElementById('overallPercentText').innerText = '100%';
+
+      setTimeout(() => {
+        stopWorkout();
+      }, 3500);
+    }
+
+    function stopWorkout() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      isPaused = false;
+
+      document.getElementById('timerScreen').classList.add('hidden');
+      document.getElementById('timerScreen').classList.remove('flex');
+      document.getElementById('configScreen').classList.remove('hidden');
+
+      // Reset button icon
+      document.getElementById('playPauseIcon').className = 'fa-solid fa-pause text-2xl';
+    }
+
+    // Initialize UI on page load
+    window.onload = function() {
+      updateConfigUI();
+    };
+  </script>
+</body>
+</html>
