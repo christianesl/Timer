@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boxing Timer Pro - Advanced Interval & Sparring Timer</title>
-    
+
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script src="./vendor/tailwindcss.js"></script>
+
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="./vendor/fontawesome.css">
+
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./vendor/fonts.css">
 
     <script>
         tailwind.config = {
@@ -151,7 +149,7 @@
         <section class="w-full bg-brand-card p-2 sm:p-3 rounded-2xl border border-brand-border shadow-xl">
             <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 whitespace-nowrap hidden md:inline">Presets:</span>
-                
+
                 <button onclick="applyPreset('pro')" class="preset-btn px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800 hover:bg-brand-red/20 hover:border-brand-red border border-brand-border text-gray-200 transition flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-brand-red"></i> Pro Boxing (12x3m)
                 </button>
@@ -175,7 +173,7 @@
 
             <!-- MAIN TIMER CANVAS CARD (Lg 7 cols) -->
             <div id="timerCard" class="lg:col-span-7 bg-brand-card p-6 sm:p-8 rounded-3xl border border-brand-border shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300">
-                
+
                 <!-- Dynamic Background Glow -->
                 <div id="bgGlow" class="absolute -inset-10 bg-brand-red/10 blur-3xl rounded-full pointer-events-none opacity-50 transition-all duration-500"></div>
 
@@ -204,8 +202,8 @@
                         <!-- Background Circle Track -->
                         <circle cx="110" cy="110" r="95" stroke="#1F293D" stroke-width="12" fill="transparent" />
                         <!-- Foreground Animated Circle -->
-                        <circle id="timerProgressCircle" class="timer-circle" cx="110" cy="110" r="95" 
-                                stroke="#FF2E55" stroke-width="12" fill="transparent" 
+                        <circle id="timerProgressCircle" class="timer-circle" cx="110" cy="110" r="95"
+                                stroke="#FF2E55" stroke-width="12" fill="transparent"
                                 stroke-dasharray="596.9" stroke-dashoffset="0" stroke-linecap="round" />
                     </svg>
 
@@ -259,7 +257,7 @@
 
                 <!-- TAB CONTAINER -->
                 <div class="bg-brand-card p-5 sm:p-6 rounded-3xl border border-brand-border shadow-xl">
-                    
+
                     <!-- Tab Navigation Header -->
                     <div class="flex border-b border-brand-border pb-3 mb-5 gap-4">
                         <button id="tabSettingsBtn" onclick="switchTab('settings')" class="text-sm font-bold pb-2 border-b-2 border-brand-red text-white transition flex items-center gap-2">
@@ -527,7 +525,7 @@
 
                     osc.type = idx === 0 ? 'sine' : 'triangle';
                     osc.frequency.setValueAtTime(freq, now);
-                    
+
                     // Pitch decay sweep
                     osc.frequency.exponentialRampToValueAtTime(freq * 0.98, now + 2.5);
 
@@ -551,11 +549,11 @@
             if (config.soundMuted) return;
             try {
                 const ctx = getAudioContext();
-                
+
                 // Play 3 quick distinct wood strikes
                 [0, 0.18, 0.36].forEach(delay => {
                     const now = ctx.currentTime + delay;
-                    
+
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
 
@@ -693,12 +691,12 @@
            =================================================================== */
         function startTimerEngine() {
             if (timerInterval) clearInterval(timerInterval);
-            
+
             timerInterval = setInterval(() => {
                 if (timerState === 'PAUSED' || timerState === 'STOPPED') return;
 
                 timeRemaining--;
-                
+
                 // Check for warning clapper
                 if (config.warningTime > 0 && timeRemaining === config.warningTime) {
                     if (timerState === 'WORK') {
@@ -878,7 +876,7 @@
                 statePill.className = "px-4 py-1.5 rounded-full text-xs font-orbitron font-extrabold tracking-widest uppercase bg-brand-red/20 text-brand-red border border-brand-red/40 flex items-center gap-2";
                 progressCircle.style.stroke = "#FF2E55";
                 bgGlow.className = "absolute -inset-10 bg-brand-red/15 blur-3xl rounded-full pointer-events-none opacity-60";
-                
+
                 if (timeRemaining <= config.warningTime && config.warningTime > 0) {
                     timerCard.classList.add('state-warning-active');
                     timerSubtext.innerText = "FINAL SECONDS!";
@@ -1053,7 +1051,7 @@
             document.getElementById('statsTotalWork').innerText = formatTime(workoutStats.totalWorkSeconds);
             document.getElementById('statsRoundsDone').innerText = workoutStats.roundsCompleted;
             document.getElementById('statsSessions').innerText = workoutStats.sessionsCompleted;
-            
+
             // Approx 11 kcal per minute of intense boxing
             const totalMinutes = workoutStats.totalWorkSeconds / 60;
             const estCalories = Math.round(totalMinutes * 11);
@@ -1136,7 +1134,7 @@
             ['Settings', 'Trainer', 'Stats'].forEach(name => {
                 const tabEl = document.getElementById(`tab${name}`);
                 const btnEl = document.getElementById(`tab${name}Btn`);
-                
+
                 if (name.toLowerCase() === tabName) {
                     tabEl.classList.remove('hidden');
                     btnEl.classList.add('border-brand-red', 'text-white');

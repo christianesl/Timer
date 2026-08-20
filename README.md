@@ -17,4 +17,4 @@ You can also open either timer directly:
 - `main_timer.html` is the full-featured timer.
 - `mobile_timer.html` is the compact mobile timer.
 
-No build step or installation is required. The pages load their fonts and interface libraries from CDNs, so an internet connection is recommended for the complete styling and icon set.
+No build step or installation is required. Fonts, icons, and the Tailwind runtime are bundled in `vendor/`, so the pages can run from local files without an internet connection. The vendor files are also ready to be included in an Android WebView or Capacitor APK.
