@@ -1,0 +1,30 @@
+{
+  "name": "timer",
+  "version": "1.0.0",
+  "description": "Browser-based boxing and exercise timers with two interfaces for different training setups.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:apk": "npm run cap:sync && export JAVA_HOME=${JAVA_HOME:-$PWD/.jdk21} && cd android && ./gradlew assembleDebug",
+    "cap:sync": "npx cap sync android"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christianesl/Timer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/christianesl/Timer/issues"
+  },
+  "homepage": "https://github.com/christianesl/Timer#readme",
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
+  }
+}
